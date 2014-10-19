@@ -1,0 +1,109 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+group = 'net.box'
+archivesBaseName = 'boxjavalibv2'
+version = '3.1.6'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile 'com.fasterxml.jackson.core:jackson-annotations:2.2.2'
+	compile 'com.fasterxml.jackson.core:jackson-core:2.2.2'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.2.2'
+	compile 'commons-codec:commons-codec:1.8'
+	compile 'commons-io:commons-io:2.4'
+	compile 'commons-lang:commons-lang:2.6'
+	compile 'org.apache.httpcomponents:httpclient-cache:4.2.5'
+	compile 'org.apache.httpcomponents:httpclient:4.2.5'
+	compile 'org.apache.httpcomponents:httpcore:4.2.4'
+	compile 'org.apache.httpcomponents:httpmime:4.2.5'
+	testCompile 'junit:junit:4.11'
+	testCompile 'org.easymock:easymock:3.1'
+}
+
+sourceSets {
+	main {
+		java.srcDirs = ['src']
+		resources.srcDirs = ['src']
+	}
+
+	test {
+		java.srcDirs = ['tst']
+		resources.srcDirs = ['tst']
+	}
+}
+
+task javadocJar(type: Jar) {
+	classifier = 'javadoc'
+	from javadoc
+}
+
+task sourcesJar(type: Jar) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
+}
+
+artifacts {
+	archives sourcesJar, javadocJar
+}
+
+signing {
+	required { !version.endsWith('SNAPSHOT') && gradle.taskGraph.hasTask('uploadArchives') }
+	sign configurations.archives
+}
+
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+			if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+				repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+					authentication(userName: ossrhUsername, password: ossrhPassword)
+				}
+
+				snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+					authentication(userName: ossrhUsername, password: ossrhPassword)
+				}
+			}
+
+			pom.project {
+				name 'Box Java SDK v2'
+				packaging 'jar'
+				description 'The Java SDK for the Box API.'
+				url 'https://github.com/box/box-java-sdk-v2'
+
+				scm {
+					url 'https://github.com/box/box-java-sdk-v2'
+					connection 'scm:git@github.com:box/box-java-sdk-v2.git'
+					developerConnection 'scm:git@github.com:box/box-java-sdk-v2.git'
+				}
+
+				licenses {
+					license {
+						name 'The Apache Software License, Version 2.0'
+						url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+						distribution 'repo'
+					}
+				}
+
+				organization {
+					name 'Box'
+					url 'https://github.com/box'
+				}
+
+				developers {
+					developer {
+						id 'jianbox'
+						name 'Jian Lin'
+						email 'jlin@box.com'
+					}
+				}
+			}
+		}
+	}
+}
