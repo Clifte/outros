@@ -35,7 +35,9 @@ public class BoxSyncConnector {
 	public  BoxClient connect() throws BoxRestException,
 		BoxServerException, AuthFatalFailureException {
 		String code = "";
-        String url = "https://www.box.com/api/oauth2/authorize?response_type=code&client_id=" + key;
+        String url = "https://www.box.com/api/oauth2/authorize?" +
+        			 "response_type=code" +
+        			 "&client_id=" + key;
         try {
             Desktop.getDesktop().browse(java.net.URI.create(url));
             code = getCode();
@@ -47,14 +49,13 @@ public class BoxSyncConnector {
 		return client;
 	}
 
-    private  BoxClient getAuthenticatedClient(String code) throws BoxRestException,     BoxServerException, AuthFatalFailureException {
+    private  BoxClient getAuthenticatedClient(String code) throws BoxRestException, BoxServerException, AuthFatalFailureException {
         BoxClient client = new BoxClient(key, secret, null);
         BoxOAuthToken bt =  client.getOAuthManager().createOAuth(code, key, secret, "http://localhost:" + PORT);
         client.authenticate(bt);
         return client;
     }
-
-
+    
     private  String getCode() throws IOException {
 
         ServerSocket serverSocket = new ServerSocket(PORT);
@@ -81,7 +82,7 @@ public class BoxSyncConnector {
                     code = code.substring(code.indexOf(match), httpstr);
                     String parts[] = code.split("=");
                     code=parts[1];
-                    out.write("Now return to command line to see the output of the HelloWorld sample app.");
+                    out.write("<html><head><script>function loaded(){alert(\"Beep!\"); window.setTimeout(CloseMe, 500);}function CloseMe(){window.close();}</script></head><body onLoad=\"loaded()\">Hello!</body>");
                 } else {
                     // It doesn't have a code
                     out.write("Code not found in the URL!");

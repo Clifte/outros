@@ -37,26 +37,22 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Vector;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
-import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
+import javax.swing.tree.DefaultTreeModel;
 
-import box.BoxSyncConnector;
-
-import com.box.boxjavalibv2.BoxClient;
-import com.box.boxjavalibv2.dao.*;
+import com.sempresol.box.BoxManager;
 
 /**
  * Display a file system in a JTree view
@@ -64,70 +60,51 @@ import com.box.boxjavalibv2.dao.*;
  * @version $Id: FileTree.java,v 1.9 2004/02/23 03:39:22 ian Exp $
  * @author Ian Darwin
  */
-public class BoxFileTreePanel extends JPanel {
+public class BoxSyncPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	BoxClient client;
-	String root;
-
-	public BoxFileTreePanel(BoxClient aclient,String aroot) throws Exception {
-		root = aroot;
-		client = aclient;
+	BoxFilePopUpMenu mouseMenu;
+	BoxManager bm;
+	
+	public BoxSyncPanel(BoxManager bm) {
 		setLayout(new BorderLayout());
-
+		this.bm = bm;
+		mouseMenu = new BoxFilePopUpMenu(bm);
+		
 		// Make a tree list with all the nodes, and make it a JTree
-		JTree tree = new JTree(addNodes(null, root));
-
-		// Add a listener
-		tree.addTreeSelectionListener(new TreeSelectionListener() {
-			public void valueChanged(TreeSelectionEvent e) {
-				DefaultMutableTreeNode node = (DefaultMutableTreeNode) e
-						.getPath().getLastPathComponent();
-				System.out.println("You selected " + node);
-			}
-		});
-
+		final JTree tree = new JTree(bm.rootNode);
+		loadTreeListener(tree);
+				 
 		// Lastly, put the JTree into a JScrollPane.
 		JScrollPane scrollpane = new JScrollPane();
 		scrollpane.getViewport().add(tree);
 		add(BorderLayout.CENTER, scrollpane);
+		
+		
+		
+		bm.loadFileTree("2360165495");
+		
 	}
 
-	/**
-	 * Add nodes from under "dir" into curTop. Highly recursive.
-	 * 
-	 * @throws AuthFatalFailureException
-	 * @throws BoxServerException
-	 * @throws Exception
-	 */
-	DefaultMutableTreeNode addNodes(DefaultMutableTreeNode curTop, String id)
-			throws Exception {
-
-		BoxFolder boxFolder = client.getFoldersManager().getFolder(id, null);
-		System.out.println("Adicionando nó:" + boxFolder.getName());
-		ArrayList<BoxTypedObject> folderEntries = boxFolder.getItemCollection()
-				.getEntries();
-
-		DefaultMutableTreeNode curDir = new DefaultMutableTreeNode(id);
-
-		if (curTop != null) { // should only be null at root
-			curTop.add(curDir);
-		}
-
-		int folderSize = folderEntries.size();
-		for (int i = 0; i <= folderSize - 1; i++) {
-			BoxTypedObject folderEntry = folderEntries.get(i);
-			if (folderEntry.getType().equals("folder")) {
-				addNodes(curDir, folderEntry.getId());
-			} else {
-				curDir.add(new DefaultMutableTreeNode(((BoxItem) folderEntry)
-						.getName()));
-				System.out.println("Item Adicionado: "
-						+ ((BoxItem) folderEntry).getName());
-			}
-
-		}
-		return curDir;
+	private void loadTreeListener(final JTree tree) {
+		MouseListener ml = new MouseAdapter() {
+		     public void mousePressed(MouseEvent e) { 	 
+		         int selRow = tree.getRowForLocation(e.getX(), e.getY());
+		         
+		         if(selRow != -1 && e.getButton()==e.BUTTON3) {
+		        	 System.out.println("Selected row: " + selRow);
+			         tree.setSelectionPath(tree.getPathForLocation(e.getX(), e.getY()));
+			         BoxManager.TreeItem it = (BoxManager.TreeItem) tree.getPathForLocation(e.getX(), e.getY()).getLastPathComponent();		        	 
+		        	 
+		        	 mouseMenu.setSelectedItem(it);
+		        	 mouseMenu.show((Component) e.getSource(), e.getX(), e.getY());	 
+		         }
+		     }
+		 };
+		 
+		 
+		 
+		tree.addMouseListener(ml);
 	}
 
 	public Dimension getMinimumSize() {
@@ -138,6 +115,7 @@ public class BoxFileTreePanel extends JPanel {
 		return new Dimension(200, 400);
 	}
 
+	
 	/**
 	 * Main: make a Frame, add a FileTree
 	 * 
@@ -152,9 +130,13 @@ public class BoxFileTreePanel extends JPanel {
 		frame.setBackground(Color.lightGray);
 		Container cp = frame.getContentPane();
 
-		BoxSyncConnector boxCon = new BoxSyncConnector();
-		BoxClient client = boxCon.connect();
-		cp.add(new BoxFileTreePanel(client,"1271362628"));
+		
+		BoxManager bm = new BoxManager();
+		bm.connect();
+		bm.setRootNodeID( "2360165495");
+		
+		
+		cp.add(new BoxSyncPanel(bm));
 
 		frame.pack();
 		frame.setVisible(true);
