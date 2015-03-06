@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import javax.swing.DefaultListModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeModel;
@@ -37,12 +38,13 @@ public class BoxManager {
     private String syncDir = System.getProperty("user.home") + "/Box";
     private final int SYSTEM = 1;                          //1=unix with touch command
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm.ss");
+    
     public TreeItem rootNode = null;
     
-    public List<TreeItem> updateNodes = new ArrayList<BoxManager.TreeItem>();
-    public List<TreeItem> deprecatedNodes = new ArrayList<BoxManager.TreeItem>();
-    public List<TreeItem> newRemoteNodes = new ArrayList<BoxManager.TreeItem>();
-    public List<TreeItem> newLocalNodes = new ArrayList<BoxManager.TreeItem>();
+    public DefaultListModel<TreeItem> changedLocal = new DefaultListModel<BoxManager.TreeItem>();
+    public DefaultListModel<TreeItem> changedRemote = new DefaultListModel<BoxManager.TreeItem>();
+    public DefaultListModel<TreeItem> newRemoteNodes = new DefaultListModel<BoxManager.TreeItem>();
+    public DefaultListModel<TreeItem> newLocalNodes = new DefaultListModel<BoxManager.TreeItem>();
     
     public void connect() {
 
@@ -108,15 +110,15 @@ public class BoxManager {
     }
 
     
-    public void download(String path,String id) throws IOException{
-    	BoxFile file = new BoxFile(api, id);
-    	
-    	BoxFile.Info info = file.getInfo();
-
-    	FileOutputStream stream = new FileOutputStream(path + info.getName());
-    	file.download(stream);
-    	stream.close();
-    }
+//    public void download(String path,String id) throws IOException{
+//    	BoxFile file = new BoxFile(api, id);
+//    	
+//    	BoxFile.Info info = file.getInfo();
+//
+//    	FileOutputStream stream = new FileOutputStream(path + info.getName());
+//    	file.download(stream);
+//    	stream.close();
+//    }
 
     public void download(final String id) throws IOException{
     	
@@ -141,7 +143,7 @@ public class BoxManager {
 			    	new File(path).mkdirs();
 			    	path += "/" +info.getName();
 
-			    	ajusteCreationTime(bfile.getInfo().getCreatedAt(),path);
+			    	
 			    	
 			    	
 			    	File file = new File(path);
@@ -157,6 +159,10 @@ public class BoxManager {
 			    	file.setLastModified(bfile.getInfo().getModifiedAt().getTime());
 
 			    	stream.close();
+			    	
+			    	
+			    	ajusteCreationTime(bfile.getInfo().getCreatedAt(),path);
+			    	System.out.println("Done");
 				}catch(Exception ex){
 					System.out.println("Erro ao realizar o download:@" + id);
 					ex.printStackTrace();
@@ -223,38 +229,33 @@ public class BoxManager {
     
     
     public TreeItem getFileTree(TreeItem curTop, String id){
-    	
-    	BoxFolder folder = new BoxFolder(api, id);
-    	    	
-		System.out.println("Adicionando nó:" + folder.getInfo().getName());
-		TreeItem curDir = new TreeItem(folder);
 
-		if (curTop != null) { // should only be null at root
-			curTop.add(curDir);
-		}else{
-			curDir = rootNode;
-	    	List<BoxFolder> parents = folder.getInfo().getPathCollection();
-	    	String path = syncDir;
-	    	for (BoxFolder boxFolder : parents) {
-				path +="/" + boxFolder.getInfo().getName();
-			}
-			
-	    	path+="/" + folder.getInfo().getName();
-	    	curDir.path = path;
-		}
+    	BoxFolder folder=null;
+    	
+    	if(curTop==null){
+    		return null;
+    	}else{
+    		folder = (BoxFolder) curTop.res;
+    	}
+    	
+		TreeItem curDir = curTop;
+
 		
 		for (BoxItem.Info itemInfo : folder) {
-  
+			BoxItem item = (BoxItem) itemInfo.getResource();	
+			TreeItem folderNode = new TreeItem(item); 
+			curDir.add(folderNode);
+			
 			if(itemInfo instanceof BoxFile.Info){
-				BoxItem item = (BoxItem) itemInfo.getResource();	
-				curDir.add(new TreeItem(item));
-				System.out.println("Adicionando item: " + item.getInfo().getName());
+				System.out.println("Adicionando item: " + itemInfo.getName());
+			
 			}else if(itemInfo instanceof BoxFolder.Info){
-				//getFileTree(curDir,itemInfo.getID());
-				FileTreeSearcher fts = new FileTreeSearcher(curDir, itemInfo.getID());
+				System.out.println("Pasta adicionada." + itemInfo.getName());
+				FileTreeSearcher fts = new FileTreeSearcher(folderNode, null);
 				fts.start();
 			}
 		}
+		
 		
 		System.out.println("Verify new local files in: " + curDir.path);
 		//Procurando por arquivos existentes apenas no diretorio local
@@ -262,9 +263,9 @@ public class BoxManager {
 		
 		if(folderFile.exists()){
 			File files[] = folderFile.listFiles();
-			
+			System.out.println(Arrays.toString(folderFile.list()));
 			for (File f : files) {
-				System.out.println("Verifying : " + f.getAbsolutePath());
+				System.out.println("Verifying : " + f.getName());
 				boolean found = false;
 				
 				for (int i = 0; i < curDir.getChildCount(); i++) {
@@ -272,15 +273,13 @@ public class BoxManager {
 					
 					if(remoteFileNode.name.compareTo(f.getName())==0){
 						found = true;
-						System.out.println("Local Copy found: " + f.getAbsolutePath());
+						System.out.println("Local Copy found: " + f.getName());
 						break;
-					}else{
-						System.out.println("|" + remoteFileNode.name + "<>" + f.getName() + "|");
 					}
 				}
 				
 				if(!found && files.length>0){
-					System.out.println("new local file: " + f.getAbsolutePath());
+					System.out.println("new local file: " + f.getName());
 					TreeItem newNode = new TreeItem(f);
 					curDir.add(newNode);
 				}
@@ -366,36 +365,41 @@ public class BoxManager {
 			
 			if(!f.exists()){
 				aprefix = "[*]";
-				newRemoteNodes.add((TreeItem) newChild);
-			}else{
+				newRemoteNodes.addElement((TreeItem) newChild);
+				System.out.println(f.getAbsolutePath() + " does not exists in local disk.");
 				
+			}else{
+				System.out.println(f.getAbsolutePath() + " exists in local disk.");
 				long remoteFileModificationDate = 0;
 				
 				if(it.res != null){
-					BoxItem bi = (BoxItem) it.res;
-					remoteFileModificationDate = bi.getInfo().getModifiedAt().getTime();
-				
-					long localFileModificationDate = f.lastModified();
+					if((it.res instanceof BoxFolder) == false ){
+						BoxItem bi = (BoxItem) it.res;
+						remoteFileModificationDate = bi.getInfo().getModifiedAt().getTime();
 					
-					if(localFileModificationDate > remoteFileModificationDate){
-						aprefix = "[u]";
-						updateNodes.add((TreeItem) newChild);
+						long localFileModificationDate = f.lastModified();
 						
-					} else if(localFileModificationDate < remoteFileModificationDate){
-						aprefix = "[d]";
-						deprecatedNodes.add((TreeItem) newChild);
+						if(localFileModificationDate > remoteFileModificationDate){
+							aprefix = "[u]";
+							changedLocal.addElement((TreeItem) newChild);
+							System.out.println(f.getAbsolutePath() + " modified local. Date:" + sdf.format(f.lastModified()));
+							
+						} else if(localFileModificationDate < remoteFileModificationDate){
+							aprefix = "[d]";
+							changedRemote.addElement((TreeItem) newChild);
+							System.out.println(f.getAbsolutePath() + " modified remote. Date:" + sdf.format(f.lastModified()));
+						}
 					}
-					
-					if(it.res instanceof BoxFolder)
-						aprefix = "";				
-				
 				}else{
-					aprefix = "[*u]";
+					aprefix = "[*L]";
+					newLocalNodes.addElement((TreeItem) newChild);
 				}
-
+				
+				
 			}
 			
-			prefix = aprefix;
+			
+			((TreeItem) newChild).prefix = aprefix;
 		}
 	}
   
@@ -412,9 +416,22 @@ public class BoxManager {
 		System.out.println("Adicionando nó raiz:" + folder.getInfo().getName());
 		rootNode = new TreeItem(folder);
 		
+		
+		
+		//Construindo path
+		List<BoxFolder> parents = folder.getInfo().getPathCollection();
+		String path = syncDir;
+		
+    	for (BoxFolder boxFolder : parents) {
+			path +="/" + boxFolder.getInfo().getName();
+		}
+		
+    	path+="/" + folder.getInfo().getName();
+    	rootNode.path = path;
+
 	}
 
-	public void loadFileTree(String id) {
-		this.getFileTree(null, id);
+	public void loadFileTree() {
+		this.getFileTree(rootNode, null);
 	}
 }

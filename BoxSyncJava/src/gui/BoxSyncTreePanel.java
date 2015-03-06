@@ -60,13 +60,13 @@ import com.sempresol.box.BoxManager;
  * @version $Id: FileTree.java,v 1.9 2004/02/23 03:39:22 ian Exp $
  * @author Ian Darwin
  */
-public class BoxSyncPanel extends JPanel {
+public class BoxSyncTreePanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 	BoxFilePopUpMenu mouseMenu;
 	BoxManager bm;
 	
-	public BoxSyncPanel(BoxManager bm) {
+	public BoxSyncTreePanel(BoxManager bm) {
 		setLayout(new BorderLayout());
 		this.bm = bm;
 		mouseMenu = new BoxFilePopUpMenu(bm);
@@ -79,11 +79,7 @@ public class BoxSyncPanel extends JPanel {
 		JScrollPane scrollpane = new JScrollPane();
 		scrollpane.getViewport().add(tree);
 		add(BorderLayout.CENTER, scrollpane);
-		
-		
-		
-		bm.loadFileTree("2360165495");
-		
+
 	}
 
 	private void loadTreeListener(final JTree tree) {
@@ -115,31 +111,4 @@ public class BoxSyncPanel extends JPanel {
 		return new Dimension(200, 400);
 	}
 
-	
-	/**
-	 * Main: make a Frame, add a FileTree
-	 * 
-	 * @throws AuthFatalFailureException
-	 * @throws BoxServerException
-	 * @throws Exception
-	 */
-	public static void main(String[] av) throws Exception {
-
-		JFrame frame = new JFrame("FileTree");
-		frame.setForeground(Color.black);
-		frame.setBackground(Color.lightGray);
-		Container cp = frame.getContentPane();
-
-		
-		BoxManager bm = new BoxManager();
-		bm.connect();
-		bm.setRootNodeID( "2360165495");
-		
-		
-		cp.add(new BoxSyncPanel(bm));
-
-		frame.pack();
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	}
 }
