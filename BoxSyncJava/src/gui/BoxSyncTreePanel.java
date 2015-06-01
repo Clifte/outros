@@ -65,14 +65,17 @@ public class BoxSyncTreePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	BoxFilePopUpMenu mouseMenu;
 	BoxManager bm;
+	final JTree tree;
 	
 	public BoxSyncTreePanel(BoxManager bm) {
 		setLayout(new BorderLayout());
 		this.bm = bm;
-		mouseMenu = new BoxFilePopUpMenu(bm);
+		int opc[] = {0,1,2};
+		mouseMenu = new BoxFilePopUpMenu(bm,opc);
 		
 		// Make a tree list with all the nodes, and make it a JTree
-		final JTree tree = new JTree(bm.rootNode);
+		tree = new JTree(new DefaultTreeModel(bm.rootNode));
+		
 		loadTreeListener(tree);
 				 
 		// Lastly, put the JTree into a JScrollPane.
@@ -91,15 +94,13 @@ public class BoxSyncTreePanel extends JPanel {
 		        	 System.out.println("Selected row: " + selRow);
 			         tree.setSelectionPath(tree.getPathForLocation(e.getX(), e.getY()));
 			         BoxManager.TreeItem it = (BoxManager.TreeItem) tree.getPathForLocation(e.getX(), e.getY()).getLastPathComponent();		        	 
-		        	 
+
 		        	 mouseMenu.setSelectedItem(it);
 		        	 mouseMenu.show((Component) e.getSource(), e.getX(), e.getY());	 
 		         }
 		     }
 		 };
-		 
-		 
-		 
+
 		tree.addMouseListener(ml);
 	}
 
