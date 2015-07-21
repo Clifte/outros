@@ -15,7 +15,10 @@ classdef DataSet < handle
        end    
        
        function normalize(obj)
-         obj.features = (obj.features - repmat(mean(obj.features),size(obj.features,1),1))./repmat(std(obj.features),size(obj.features,1),1);
+         MEAN = repmat(mean(obj.features),size(obj.features,1),1);
+         STD = repmat(std(obj.features),size(obj.features,1),1);
+         
+         obj.features = (obj.features - MEAN ) ./ STD;
          tam = size(obj.data,2);  
          obj.labels = obj.data(:,(tam : tam));
          obj.data = [obj.features obj.labels];

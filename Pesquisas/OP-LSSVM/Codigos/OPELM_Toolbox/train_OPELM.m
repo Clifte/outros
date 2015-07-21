@@ -50,7 +50,7 @@ function [model]=train_OPELM(data,kernel,maxneur,problem,normal,KM)
 %             of European Symposium on Artificial Neural Networks (ESANN)
 %             2008, Bruges, Belgium.
 %
-%             Timo Similä, Jarkko Tikka. Multiresponse sparse regression with
+%             Timo Similï¿½, Jarkko Tikka. Multiresponse sparse regression with
 %             application to multidimensional scaling. International Conference
 %             on Artificial Neural Networks (ICANN). Warsaw, Poland. September
 %             11-15, 2005. LNCS 3697, pp. 97-102.
@@ -433,6 +433,7 @@ KM_norm=zeros(Np,nn);
 for i=1:nn
     KM_norm(:,i)=(KM.value(:,i)-mean(KM.value(:,i)))/std(KM.value(:,i));
 end
+
 y_norm=zeros(No,n);
 for i=1:n
     y_norm(:,i)=(y(:,i)-mean(y(:,i)))/std(y(:,i));
@@ -451,10 +452,11 @@ end
 
 %% Leave-One-Out
 disp(['Computing model with ',int2str(d),' variable(s)...']);
-err=zeros(nn,n);
-mycond=zeros(1,nn);
-errloo=Inf(nn,n);
+err     = zeros(nn,n);
+mycond  = zeros(1,nn);
+errloo  = Inf(nn,n);
 maxsamples=min(N,5000);
+
 if max(strcmp(kernel,{'l';'ls';'lg';'lsg'}))
     nn_indexes=[1:d d+5:5:nn];
 else
@@ -465,11 +467,11 @@ for i=nn_indexes
     W2=[KM.value(1:maxsamples,1:i) ones(maxsamples,1)]\y(1:maxsamples,:);
     yh=[KM.value(1:maxsamples,1:i) ones(maxsamples,1)]*W2;
     err(i,1:n)=mean((yh(1:maxsamples,:)-y(1:maxsamples,:)).^2);
-    P=inv([KM.value(1:maxsamples,1:i) ones(maxsamples,1)]'*[KM.value(1:maxsamples,1:i) ones(maxsamples,1)]);
+    P = inv( [KM.value(1:maxsamples,1:i) ones(maxsamples,1)]' * [KM.value(1:maxsamples,1:i) ones(maxsamples,1)]);
     mycond(i)=rcond(P);
     if mycond(1,i)>1e-017
-        mydiag=[KM.value(1:maxsamples,1:i) ones(maxsamples,1)]*P*[KM.value(1:maxsamples,1:i) ones(maxsamples,1)]';
-        errloo(i,1:n)=mean(((y(1:maxsamples,:)-[KM.value(1:maxsamples,1:i) ones(maxsamples,1)]*W2)./repmat((1-diag(mydiag)),1,n)).^2,1);
+        mydiag = [KM.value(1:maxsamples,1:i) ones(maxsamples,1)] * P * [KM.value(1:maxsamples,1:i) ones(maxsamples,1)]';
+        errloo(i,1:n) = mean(  ((y(1:maxsamples,:) - [KM.value(1:maxsamples,1:i) ones(maxsamples,1)] * W2)./repmat((1-diag(mydiag)),1,n)).^2,1);
     else
         errloo(i,1:n)=inf;
         break
@@ -488,19 +490,19 @@ yhloo=zeros(No,n);
 for i=1:n
     W2(1:min_index(i)+1,i)=[KM.value(:,1:min_index(i)) ones(N,1)]\y(:,i);
     if problem=='r'
-        yh(:,i)=[KM.value(:,1:min_index(i)) ones(N,1)]*W2(1:min_index(i)+1,i);
+        yh(:,i)=[KM.value(:,1:min_index(i)) ones(N,1)] * W2(1:min_index(i)+1,i);
         if (N<5000)
       	    P=inv([KM.value(:,1:min_index(i)) ones(N,1)]'*[KM.value(:,1:min_index(i)) ones(N,1)]);
-            mydiag=[KM.value(:,1:min_index(i)) ones(N,1)]*P*[KM.value(:,1:min_index(i)) ones(N,1)]';
-            yhloo(:,i)=y(:,i)-(y(:,i)-yh(:,i))./(1-diag(mydiag));
-	end
+            mydiag=[KM.value(:,1:min_index(i)) ones(N,1)] * P * [KM.value(:,1:min_index(i)) ones(N,1)]';
+            yhloo(:,i)= y(:,i) - (y(:,i)-yh(:,i)) ./ (1 - diag(mydiag));
+        end
    else
         yh(:,i)=[KM.value(:,1:min_index(i)) ones(N,1)]*W2(1:min_index(i)+1,i);
         if (N<5000)
-	    P=inv([KM.value(:,1:min_index(i)) ones(N,1)]'*[KM.value(:,1:min_index(i)) ones(N,1)]);
+            P=inv([KM.value(:,1:min_index(i)) ones(N,1)]'*[KM.value(:,1:min_index(i)) ones(N,1)]);
             mydiag=[KM.value(:,1:min_index(i)) ones(N,1)]*P*[KM.value(:,1:min_index(i)) ones(N,1)]';
             yhloo(:,i)=sign(y(:,i)-(y(:,i)-yh(:,i))./(1-diag(mydiag)));
-	end
+        end
         yh(:,i)=sign(yh(:,i));
     end
 end
