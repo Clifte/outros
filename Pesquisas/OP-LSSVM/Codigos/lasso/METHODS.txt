@@ -1,0 +1,60 @@
+ActiveSet (constrained):
+An Active Set Quadratic Program solver designed for this problem.
+
+BlockCoordinate (scaled):
+A method that optimizes parameters blocks (uses another scaled solver as a
+sub-routine).
+
+Constrained (constrained or scaled, depending on mode):
+Formulates the problem as a constrained optimization problem (4 different
+ways), and uses a generic constrained solver (3 solvers available).
+
+GaussSeidel (scaled):
+A method that optimizes individual parameters, choosing the parameter that is
+furthest from the first-order optimality condition (bottom-up and top-down
+strategy implemented).
+
+Grafting (scaled):
+A method that optimizes a set of working parameters with standard unconstrained
+optimization using sub-gradients, and introduces parameters incrementally
+(ie. bottom-up).
+
+IteratedRidge (scaled):
+An EM-like algorithm that solves a sequence of ridge-regression problems (4
+strategies to deal with instability and 3 strategies to solve ridge problem
+available).
+
+IterativeSoftThresholding (scaled, where norm(X) is less than or equal to 1):
+A fixed-point algorithm that repeatedly applies the soft-threshold 
+operator to the current weight vector moved in the direction of steepest descent.
+
+LARS (constrained)*:
+Uses a version of the LARS algorithm where we stop at the desired value of
+lambda.
+
+NonNegativeSquared (scaled):
+Uses a reformulation in terms of non-negative-squared variables, that can be
+solved with an unconstrained optimizer.
+
+PrimalDualLogBarrier (scaled):
+An Interior Point Quadratic Program solver designed specifically for this
+problem.
+
+Projection (scaled):
+Uses a bound-constrained formulation, solved with a second-order
+gradient-projection strategy.
+
+Shooting (scaled):
+A method that optimizes individual parameters, cycling through them in order.
+
+SignConstraints (constrained):
+The algorithm of Tibshirani, where a sequence of Quadratic Programs are solved,
+each having 1 additional constraint.
+
+SubGradient (scaled):
+A sub-gradient strategy based on the first-order optimality conditions.
+
+UnconstrainedApx (scaled):
+Uses a smooth approximation to |w|_1, and solves with an unconstrained
+optimizer (3 approximations available).  Also implements a strategy where the
+approximation is deformed into |w|_1 to speed convergence.

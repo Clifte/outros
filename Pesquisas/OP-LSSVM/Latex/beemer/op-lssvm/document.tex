@@ -93,44 +93,6 @@ Univ of S
 \end{frame}
 
 
-\section{Introduction}
-
-\subsection[Short First Subsection Name]{First Subsection Name}
-
-\begin{frame}
-	\frametitle{}
-	\framesubtitle{Subtitles are optional}
-	
-	\begin{itemize}
-	  \item
-	  \item
-	\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{}
-
-% You can create overlays
-\begin{itemize}
-  \item using the \texttt{pause} command:
-  \begin{itemize}
-    \item First item.
-    \pause
-    \item Second item.
-  \end{itemize}
-  \item using overlay specifications:
-  \begin{itemize}
-    \item<3-> First item.
-    \item<4-> Second item.
-  \end{itemize}
-  \item using the general \texttt{uncover} command:
-  \begin{itemize}
-    \uncover<5->{\item First item.}
-    \uncover<6->{\item Second item.}
-  \end{itemize}
-\end{itemize}
-\end{frame}
-
 \section{Regression Shirinkage and SubsetSelection}
 
 \subsection{Least Squares Regression}
@@ -145,7 +107,7 @@ Univ of S
 	\includegraphics[width=0.5\textwidth]{imagens/lsr.png} 
 \end{figure}
 \end{frame}
-
+ 
 
 
 
@@ -188,7 +150,7 @@ Univ of S
 	  \subfloat  {\includegraphics[width=3cm]{imagens/e1.png}}\qquad
 	  \subfloat  {\includegraphics[width=3cm]{imagens/e2.png}}
 	\end{figure}
-\end{frame} 
+\end{frame}  
 
 
 \subsection{LASSO}
@@ -207,14 +169,43 @@ ser removidos.
 	\\
 	\sum_{j=1}^n abs(b_j) < c
 \end{align}
-
-
-
-
 \end{frame}
 
 
+\subsubsection{Forward selection}
 
+\begin{frame}
+\textbf{ Forward selection}: which involves starting with no variables in the
+model, testing the addition of each variable using a chosen model comparison criterion,
+adding the variable (if any) that improves the model the most, and repeating
+this process until none improves the model.
+
+\begin{itemize}
+\item Start with all coefficients bj equal to zero.
+\item Find the predictor xj most correlated with y, and add it into the model.
+Take residuals r= y-yhat.
+\item Continue, at each stage adding to the model the predictor most correlated
+with r.
+\item Until: all predictors are in the model
+\end{itemize}
+
+\end{frame}
+
+\subsubsection{LARS}
+
+
+\begin{frame}
+\textbf{ Least angle regression algorithm:}
+	\begin{itemize}
+	\item Start with all coefficients bj equal to zero.
+	\item Find the predictor xj most correlated with y
+	\item Increase the coefficient bj in the direction of the sign of its
+	correlation with y. Take residuals r=y-yhat along the way. Stop when some other predictor xk has as much correlation with r as xj has.
+	\item Increase (bj, bk) in their joint least squares direction, until some other
+	predictor xm has as much correlation with the residual r.
+	\item Continue until: all predictors are in the model
+	\end{itemize}
+\end{frame}
 
 
 \section{OP-ELM}
