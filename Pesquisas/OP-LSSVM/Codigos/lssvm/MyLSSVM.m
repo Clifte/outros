@@ -19,8 +19,8 @@ classdef MyLSSVM < handle
       
       function train(obj)
         % getting A.x = b problem
-        A = (obj.train_features*obj.train_features').*(obj.train_labels*obj.train_labels');
-        A = A + (1/obj.gamma)*eye(size(obj.train_features,1));
+        A = (obj.train_features * obj.train_features').*(obj.train_labels*obj.train_labels');
+        A = A + (1/obj.gamma) * eye(size(obj.train_features,1));
         A = [obj.train_labels'; A];
         A = [[0; obj.train_labels] A];
         aux = ones(size(obj.train_features,1),1);

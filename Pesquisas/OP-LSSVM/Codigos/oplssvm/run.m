@@ -7,7 +7,7 @@ addpath('../databases/');
 addpath('../lssvm/');
 
 
-realizations = 1;
+realizations = 5;
 train_percs = 80;
 
 % set params up
@@ -26,26 +26,24 @@ for b=1:length(bases)
 
     hit_rate = zeros(realizations,1);
     sv_rate = zeros(realizations,1);
-    accCalc = [];
-    err = [];
+
+    accCalc = zeros(realizations, params.max_sv);
+    err = zeros(realizations, params.max_sv);
 
     ds.labels(ds.labels~=1)=-1;
     ds.labels(ds.labels==1)=1;
 
     for i = 1 : realizations
         i
-
+        %holdout padrao
         [train_features train_labels test_features test_labels] = ds.shuffle(train_percs);
 
         [my] = OPLSSVM(train_features, train_labels, params);
 
         if(length(accCalc))
             [acc info] = my.train();
-            accCalc = accCalc + acc;
-            err = err + info.err;
-        else
-            [accCalc info] = my.train();
-            err =  info.err;
+            accCalc(i,:) = acc;
+            err(i,:) = info.err;
         end
 
         %my = PrunningLSSVM(train_features, train_labels, params);
@@ -55,11 +53,15 @@ for b=1:length(bases)
         %make decision function
         output_labels = my.classify(test_features);
         hit_rate(i,1) = length(find((output_labels - test_labels) == 0))/size(test_features,1);
-        hit_rate(i,1);
+
         sv_rate(i,1) = length(my.alphas);
     end
-
-
+    
+    stdDvCalc = std(accCalc);
+    accCalcM = mean(accCalc); %Media de realizacoes
+    
+    err = mean(err);
+    
     hit_mean_rate = mean(hit_rate);
     hit_mean_rate
 
@@ -76,30 +78,34 @@ for b=1:length(bases)
 
 
 
-    if(length(accCalc))
-        accCalc = accCalc / realizations;
-        err = err / realizations;
-        subplot(3,1,1);
-        color = rand(1,3);
-        plot([0 params.max_sv ],[hit_mean_rate hit_mean_rate ],'color',color); hold on;
-        title('LSSVM')
-        xlabel('Quantidade de neurônios');
-        ylabel('Acurácia');
+    if(length(accCalcM))
+          color = rand(1,3);
+%         accCalc = accCalc / realizations;
+%         err = err / realizations;
+%         subplot(3,1,1);
+%         plot([0 params.max_sv ],[hit_mean_rate hit_mean_rate ],'color',color); hold on;
+%         title('LSSVM')
+%         xlabel('Quantidade de neurônios');
+%         ylabel('Acurácia');
         
-        
-        subplot(3,1,2); 
-        plot(info.nn,accCalc(info.nn),'color',color); hold on;
+        [v i] = max(accCalcM(info.nn));
+        subplot(2,1,1);
+        plot([0 params.max_sv ],[hit_mean_rate hit_mean_rate ],'--','color',color); hold on;
+        plot(info.nn,accCalcM(info.nn),'color',color); hold on;
+        scatter(info.nn(i),v,'MarkerEdgeColor',color,...
+              'MarkerFaceColor',color,...
+              'LineWidth',1.5)
         
         title('OPLSSVM')
-        xlabel('Quantidade de neurônios');
+        xlabel('Quantidade de neuronios');
         ylabel('Acurácia');
 
         
-        subplot(3,1,3); 
+        subplot(2,1,2); 
         plot(info.nn,err(info.nn),'color',color); hold on;
         
         title('Erro Q medio')
-        xlabel('Quantidade de neurônios');
+        xlabel('Quantidade de neuronios');
         ylabel('Error');
         
         
